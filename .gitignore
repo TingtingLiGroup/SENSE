@@ -11,3 +11,6 @@ outputs/
 *.tmp
 *.log
 .DS_Store
+
+*.docx
+machine_learning_models_section_draft.md
