@@ -1,9 +1,10 @@
 [project]
-name = "microdroplet-ml-open"
+name = "sense-ml"
 version = "0.1.0"
 description = "Script-first training and inference pipeline for the Microdroplet model"
 readme = "README.md"
 requires-python = ">=3.11"
+repository = "https://github.com/TingtingLiGroup/SENSE"
 dependencies = [
   "biopython>=1.85",
   "cloudpickle==3.1.1",

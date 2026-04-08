@@ -1,6 +1,8 @@
-# microdroplet-ml-open
+# SENSE
 
 Open, script-first ML pipeline for peptide microcompartment and solubility prediction.
+
+**Repository:** https://github.com/TingtingLiGroup/SENSE
 
 This repository provides:
 
