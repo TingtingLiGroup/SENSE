@@ -8,7 +8,10 @@ __pycache__/
 artifacts/
 outputs/
 
-data/
+data/*
+!data/raw/
+data/raw/*
+!data/raw/experiments_sequences_20250425-V18-modified.xlsx
 
 *.tmp
 *.log
