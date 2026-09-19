@@ -1,12 +1,15 @@
-sequence_column: Seq
-name_column: name
+sequence_column: sequence
+name_column: sequence_id
 min_length: 14
 cv_folds: 3
 cv_random_state: 13
-performance_group: micro_physiochemical
+
+labels:
+  associative_framework: associative_framework_label
+  solubility: solubility_label
 
 feature_sets:
-  micro_physiochemical:
+  associative_framework:
     - norm_rg
     - norm_re
     - epsilon_mf
@@ -15,68 +18,42 @@ feature_sets:
     - fraction_aliphatic
     - hydrophobicity
     - FCR
-  micro_physical:
-    - norm_rg
-    - norm_re
-    - epsilon_mf
-    - epsilon_cf
-    - asphericity
-  sol_physiochemical:
+  solubility:
     - fraction_aliphatic
     - hydrophobicity
     - pI
     - fraction_aromatic
     - rg
-  sol_chemical:
-    - fraction_aliphatic
-    - hydrophobicity
-    - pI
-    - fraction_aromatic
 
 outputs:
-  features_table: features_generated.csv
-  model_performance: model_performance_on_microcompartment_3fold.csv
-
-  models_alldata: models_alldata_20250425.pkl
-  data_micro_prediction_physiochemical: data_micro_prediction_physiochemical_20250425.csv
-
-  models_physical_alldata: models_physical_alldata_20250425.pkl
-  data_micro_prediction_physical: data_micro_prediction_physical_20250425.csv
-
-  models_sol_alldata: models_sol_alldata_20250425.pkl
-  data_sol_prediction_physiochemical: data_sol_prediction_physiochemical_20250425.csv
-
-  models_sol_chemical_alldata: models_sol_chemical_alldata_20250425.pkl
-  data_sol_prediction_chemical: data_sol_prediction_chemical_20250425.csv
+  features_table: peptide_features.csv
+  associative_framework_cv: associative_framework_cv_metrics.csv
+  associative_framework_models: associative_framework_model_bundle.pkl
+  associative_framework_predictions: associative_framework_training_predictions.csv
+  solubility_cv: solubility_cv_metrics.csv
+  solubility_models: solubility_model_bundle.pkl
+  solubility_predictions: solubility_training_predictions.csv
 
 prediction_groups:
-  - name: micro_physiochemical
-    task: micro
-    feature_set: micro_physiochemical
-    model_output: models_alldata
-    train_prediction_output: data_micro_prediction_physiochemical
-    model_file: models_alldata_20250425.pkl
-    prefix: micro_physchem
-  - name: sol_physiochemical
-    task: sol
-    feature_set: sol_physiochemical
-    model_output: models_sol_alldata
-    train_prediction_output: data_sol_prediction_physiochemical
-    model_file: models_sol_alldata_20250425.pkl
-    prefix: sol_physchem
-  # Optional legacy groups are kept in the repository and exposed through
-  # configs/full.yaml, but are not enabled by default.
-  # - name: micro_physical
-  #   task: micro
-  #   feature_set: micro_physical
-  #   model_output: models_physical_alldata
-  #   train_prediction_output: data_micro_prediction_physical
-  #   model_file: models_physical_alldata_20250425.pkl
-  #   prefix: micro_physical
-  # - name: sol_chemical
-  #   task: sol
-  #   feature_set: sol_chemical
-  #   model_output: models_sol_chemical_alldata
-  #   train_prediction_output: data_sol_prediction_chemical
-  #   model_file: models_sol_chemical_alldata_20250425.pkl
-  #   prefix: sol_chemical
+  - name: associative_framework
+    task: associative_framework
+    feature_set: associative_framework
+    cv_output: associative_framework_cv
+    model_output: associative_framework_models
+    train_prediction_output: associative_framework_predictions
+    model_file: associative_framework_model_bundle.pkl
+    prefix: associative_framework
+  - name: solubility
+    task: solubility
+    feature_set: solubility
+    cv_output: solubility_cv
+    model_output: solubility_models
+    train_prediction_output: solubility_predictions
+    model_file: solubility_model_bundle.pkl
+    prefix: solubility
+
+reference_checks:
+  - associative_framework_cv
+  - associative_framework_predictions
+  - solubility_cv
+  - solubility_predictions

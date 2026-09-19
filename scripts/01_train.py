@@ -14,7 +14,7 @@ from microdroplet_ml.pipeline import run_train
 
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(
-        description="Train microdroplet models from sequence table."
+        description="Train the associative-framework and solubility models."
     )
     parser.add_argument("--input", required=True, help="Input .xlsx/.csv file")
     parser.add_argument("--out-dir", required=True, help="Directory for model artifacts")

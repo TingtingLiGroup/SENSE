@@ -34,17 +34,19 @@ def _get_prediction_groups(config: dict[str, Any]) -> list[dict[str, Any]]:
     return groups
 
 
-def _to_binary_label(series: pd.Series) -> np.ndarray:
-    return series.apply(lambda x: 1 if x == "Positive" else 0).to_numpy()
+def _to_binary_associative_framework(series: pd.Series) -> np.ndarray:
+    invalid = sorted(set(series.dropna()) - {"Positive", "Negative"})
+    if invalid:
+        raise ValueError(f"Invalid associative-framework labels: {invalid}")
+    return series.map({"Positive": 1, "Negative": 0}).to_numpy(dtype=int)
 
 
 def _to_binary_solubility(series: pd.Series) -> np.ndarray:
-    return (
-        series.astype(str)
-        .str.lower()
-        .apply(lambda x: 0 if "insolub" in x else 1)
-        .to_numpy()
-    )
+    numeric = pd.to_numeric(series, errors="raise")
+    invalid = sorted(set(numeric.dropna()) - {0, 1})
+    if invalid:
+        raise ValueError(f"Invalid solubility labels: {invalid}")
+    return numeric.to_numpy(dtype=int)
 
 
 def _dump_pickle(obj: object, path: Path) -> Path:
@@ -127,7 +129,11 @@ def run_train(
     feature_sets = _get_feature_sets(config)
     outputs = _get_outputs(config)
     model_groups = _get_prediction_groups(config)
-    performance_group_name = config.get("performance_group")
+    labels = config.get("labels", {})
+    associative_label_col = labels.get(
+        "associative_framework", "associative_framework_label"
+    )
+    solubility_label_col = labels.get("solubility", "solubility_label")
 
     input_df = read_table(input_path)
     if max_rows is not None:
@@ -143,45 +149,26 @@ def run_train(
     )
     written["features_table"] = feature_path
 
-    data_micro = data_features[
-        data_features["label"].isin(["Positive", "Negative"])
+    data_associative = data_features[
+        data_features[associative_label_col].notna()
         & (data_features["length"] >= min_length)
     ].reset_index(drop=True)
 
-    data_micro_y = _to_binary_label(data_micro["label"])
-    data_sol = data_features[data_features["length"] >= min_length].reset_index(drop=True)
-    data_sol_y = _to_binary_solubility(data_sol["Pep. Conc."])
+    data_associative_y = _to_binary_associative_framework(
+        data_associative[associative_label_col]
+    )
+    data_solubility = data_features[
+        data_features[solubility_label_col].notna()
+        & (data_features["length"] >= min_length)
+    ].reset_index(drop=True)
+    data_solubility_y = _to_binary_solubility(
+        data_solubility[solubility_label_col]
+    )
 
     task_inputs: dict[str, tuple[pd.DataFrame, np.ndarray]] = {
-        "micro": (data_micro, data_micro_y),
-        "sol": (data_sol, data_sol_y),
+        "associative_framework": (data_associative, data_associative_y),
+        "solubility": (data_solubility, data_solubility_y),
     }
-
-    if performance_group_name is not None:
-        matching_group = next(
-            (group for group in model_groups if group["name"] == performance_group_name),
-            None,
-        )
-        if matching_group is None:
-            raise ValueError(f"Performance group not enabled: {performance_group_name}")
-
-        performance_task = matching_group["task"]
-        performance_feature_set = matching_group["feature_set"]
-        perf_df, perf_y = task_inputs[performance_task]
-        perf_x = perf_df[feature_sets[performance_feature_set]].to_numpy()
-        perf_table = evaluate_models(
-            perf_x,
-            perf_y,
-            seed=seed,
-            n_fold=cv_folds,
-            cv_random_state=cv_random_state,
-        )
-        perf_path = write_table(
-            perf_table,
-            output_dir / outputs["model_performance"],
-            index=True,
-        )
-        written["model_performance"] = perf_path
 
     for group in model_groups:
         task = group["task"]
@@ -196,8 +183,37 @@ def run_train(
         feature_cols = feature_sets[feature_set_name]
         group_x = group_df[feature_cols].to_numpy()
 
+        cv_output_key = group.get("cv_output")
+        if cv_output_key:
+            cv_table = evaluate_models(
+                group_x,
+                group_y,
+                seed=seed,
+                n_fold=cv_folds,
+                cv_random_state=cv_random_state,
+            )
+            written[cv_output_key] = write_table(
+                cv_table,
+                output_dir / outputs[cv_output_key],
+                index=False,
+            )
+
         models = fit_models(group_x, group_y, seed=seed)
         group_with_pred, _ = add_model_predictions(group_df, group_x, group_y, models)
+
+        label_col = (
+            associative_label_col
+            if task == "associative_framework"
+            else solubility_label_col
+        )
+        prediction_columns = [
+            name_col,
+            "sequence",
+            label_col,
+            *feature_cols,
+            *models.keys(),
+        ]
+        group_with_pred = group_with_pred[prediction_columns]
 
         written[model_output_key] = _dump_pickle(
             models, output_dir / outputs[model_output_key]
@@ -205,7 +221,7 @@ def run_train(
         written[prediction_output_key] = write_table(
             group_with_pred,
             output_dir / outputs[prediction_output_key],
-            index=True,
+            index=False,
         )
 
     return written

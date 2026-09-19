@@ -142,7 +142,7 @@ def property_cal(seq_dict: Mapping[str, str]) -> pd.DataFrame:
 
 
 def _normalize_sequence(seq: str) -> str:
-    return str(seq).strip().replace(" ", "")
+    return str(seq).strip().replace(" ", "").upper()
 
 
 def _ensure_name_column(data: pd.DataFrame, name_col: str) -> pd.DataFrame:
@@ -169,6 +169,13 @@ def feature_generation(
     merged = _ensure_name_column(merged, name_col)
 
     merged["sequence"] = merged[seq_col].apply(_normalize_sequence)
+    valid_sequence = merged["sequence"].str.fullmatch(r"[ACDEFGHIKLMNPQRSTVWY]+")
+    if not valid_sequence.all():
+        invalid_names = merged.loc[~valid_sequence, name_col].astype(str).tolist()
+        raise ValueError(
+            "Sequences must contain only the 20 canonical amino-acid codes. "
+            f"Invalid records: {invalid_names}"
+        )
     merged["length"] = merged["sequence"].apply(len)
 
     amino_acids = "ACDEFGHIKLMNPQRSTVWY"

@@ -8,10 +8,10 @@ __pycache__/
 artifacts/
 outputs/
 
-data/*
-!data/raw/
-data/raw/*
-!data/raw/experiments_sequences_20250425-V18-modified.xlsx
+# Local legacy files retained outside the public release layout.
+data/.gitkeep
+data/raw/
+data/reference/*_20250425.*
 
 *.tmp
 *.log

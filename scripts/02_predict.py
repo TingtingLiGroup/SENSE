@@ -14,7 +14,7 @@ from microdroplet_ml.pipeline import run_predict
 
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(
-        description="Run inference with trained microdroplet models."
+        description="Run inference with the released model bundles."
     )
     parser.add_argument("--input", required=True, help="Input .xlsx/.csv with sequences")
     parser.add_argument("--models", required=True, help="Directory containing model .pkl files")

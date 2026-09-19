@@ -1,7 +1,5 @@
 from __future__ import annotations
 
-from dataclasses import dataclass
-
 import numpy as np
 import pandas as pd
 from sklearn.ensemble import RandomForestClassifier
@@ -17,16 +15,11 @@ from sklearn.neural_network import MLPClassifier
 from sklearn.svm import SVC
 from tabpfn import TabPFNClassifier
 
-
-@dataclass(frozen=True)
-class DatasetSpec:
-    feature_set_name: str
-    feature_columns: list[str]
-    target_name: str
-
-
 def build_models(seed: int) -> dict[str, object]:
     return {
+        # TabPFN's released default is random_state=0; keep it fixed to match
+        # the manuscript analysis. The CLI seed controls the scikit-learn
+        # models below.
         "TabPFN": TabPFNClassifier(),
         "LogisticRegression": LogisticRegression(max_iter=1000),
         "RandomForestClassifier": RandomForestClassifier(n_estimators=100, random_state=seed),
@@ -86,7 +79,7 @@ def evaluate_models(
     n_fold: int = 3,
     cv_random_state: int = 13,
 ) -> pd.DataFrame:
-    rows: list[tuple[str, str, float]] = []
+    rows: list[tuple[int, str, str, float]] = []
     models = build_models(seed)
 
     for model_name, model in models.items():
@@ -97,10 +90,10 @@ def evaluate_models(
             n_fold=n_fold,
             random_state=cv_random_state,
         )
-        rows.extend((model_name, "auroc", v) for v in fold_aurocs)
-        rows.extend((model_name, "auprc", v) for v in fold_auprcs)
+        rows.extend((fold, model_name, "auroc", v) for fold, v in enumerate(fold_aurocs, 1))
+        rows.extend((fold, model_name, "auprc", v) for fold, v in enumerate(fold_auprcs, 1))
 
-    return pd.DataFrame(rows, columns=["model", "metric", "value"])
+    return pd.DataFrame(rows, columns=["fold", "model", "metric", "value"])
 
 
 def fit_models(data_x: np.ndarray, data_y: np.ndarray, seed: int) -> dict[str, object]:

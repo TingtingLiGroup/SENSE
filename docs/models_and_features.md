@@ -1,70 +1,41 @@
-# Models And Features
+# Models and features
 
-This document describes exactly which feature sets and model bundles are used.
+## Associative-framework model
 
-## Model bundles
+Artifact: `models/associative_framework_model_bundle.pkl`
 
-Default config: `configs/default.yaml`
+Training set: 44 sequences, comprising 20 positive and 24 negative experimental
+labels.
 
-- `models_alldata_20250425.pkl`
-- `models_sol_alldata_20250425.pkl`
+| Internal name | Interpretation |
+|---|---|
+| `norm_rg` | Predicted radius of gyration normalized by the AFRC analytical expectation |
+| `norm_re` | Predicted end-to-end distance normalized by the AFRC analytical expectation |
+| `epsilon_mf` | FINCHES Mpipi mean-field homotypic interaction strength |
+| `epsilon_cf` | FINCHES CALVADOS contact-fluctuation interaction strength |
+| `asphericity` | Predicted chain-shape asphericity |
+| `fraction_aliphatic` | Fraction of aliphatic residues |
+| `hydrophobicity` | Sequence hydrophobicity |
+| `FCR` | Fraction of charged residues |
 
-Full config: `configs/full.yaml`
+## Solubility model
 
-- `models_alldata_20250425.pkl`
-- `models_physical_alldata_20250425.pkl`
-- `models_sol_alldata_20250425.pkl`
-- `models_sol_chemical_alldata_20250425.pkl`
+Artifact: `models/solubility_model_bundle.pkl`
 
-### `models_alldata_20250425.pkl`
+Training set: 50 sequences, comprising 35 positive and 15 insoluble-class
+records.
 
-- Task: microcompartment classification
-- Feature set: `micro_physiochemical`
-- Features:
-  - `norm_rg`
-  - `norm_re`
-  - `epsilon_mf`
-  - `epsilon_cf`
-  - `asphericity`
-  - `fraction_aliphatic`
-  - `hydrophobicity`
-  - `FCR`
+| Internal name | Interpretation |
+|---|---|
+| `fraction_aliphatic` | Fraction of aliphatic residues |
+| `hydrophobicity` | Sequence hydrophobicity |
+| `pI` | Predicted isoelectric point |
+| `fraction_aromatic` | Fraction of aromatic residues |
+| `rg` | Predicted absolute radius of gyration |
 
-### `models_physical_alldata_20250425.pkl`
+## Classifier families
 
-- Task: microcompartment classification
-- Feature set: `micro_physical`
-- Features:
-  - `norm_rg`
-  - `norm_re`
-  - `epsilon_mf`
-  - `epsilon_cf`
-  - `asphericity`
-
-### `models_sol_alldata_20250425.pkl`
-
-- Task: solubility classification
-- Feature set: `sol_physiochemical`
-- Features:
-  - `fraction_aliphatic`
-  - `hydrophobicity`
-  - `pI`
-  - `fraction_aromatic`
-  - `rg`
-
-### `models_sol_chemical_alldata_20250425.pkl`
-
-- Task: solubility classification
-- Feature set: `sol_chemical`
-- Features:
-  - `fraction_aliphatic`
-  - `hydrophobicity`
-  - `pI`
-  - `fraction_aromatic`
-
-## Base models inside each bundle
-
-Each bundle stores the same five classifiers:
+Each model bundle contains fitted instances named:
 
 - `TabPFN`
 - `LogisticRegression`
@@ -72,19 +43,20 @@ Each bundle stores the same five classifiers:
 - `SVC`
 - `MLPClassifier`
 
-## Feature generation sources
+The scikit-learn settings are defined in
+`src/microdroplet_ml/modeling.py`. TabPFN uses its released default architecture
+and default random state of 0. Random forest uses 100 trees; the multilayer
+perceptron uses hidden layers of 100 and 50 units. All task and feature mappings
+are centralized in `configs/default.yaml`.
 
-Feature computation is implemented in `src/microdroplet_ml/features.py` and includes:
+## Feature software
 
-- sequence-derived counts/fractions (`A`, `C`, ..., `Y`, `frac_A`, ..., `frac_Y`)
-- sticker spacing (`sticker_distance`)
-- physics predictors from `sparrow` and `afrc` (`rg`, `re`, `scaled_rg`, `scaled_re`, `asphericity`, `scaling_exponent`, `prefactor`, `mean_rg`, `mean_re`, `norm_rg`, `norm_re`)
-- interaction terms from `finches` (`epsilon_mf`, `epsilon_cf`, `fourier_peakratio`)
-- composition/biochemical terms (`FCR`, `NCPR`, `fraction_*`, `hydrophobicity`, `pI`)
+- Sparrow provides sequence-to-ensemble predictions (`rg`, `re`, and
+  `asphericity`).
+- AFRC supplies analytical polymer expectations used to normalize chain
+  dimensions.
+- FINCHES supplies Mpipi and CALVADOS homotypic interaction descriptors.
+- Sparrow and Biopython supply sequence composition, hydrophobicity, charge,
+  and isoelectric-point properties.
 
-## Performance and importance reference files
-
-- CV metrics used by notebook barplot:
-  - `data/reference/model_performance_on_microcompartment_3fold.csv`
-- Feature importance table used in analysis:
-  - `data/reference/feature_importance_all_features_20250425.csv`
+Exact versions and Git commits are locked in `uv.lock`.

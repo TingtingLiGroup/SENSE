@@ -1,33 +1,30 @@
 [project]
 name = "sense-ml"
-version = "0.1.0"
-description = "Script-first training and inference pipeline for the Microdroplet model"
+version = "1.0.0"
+description = "Training, interpretation, and inference pipeline for the released peptide classifiers"
 readme = "README.md"
-requires-python = ">=3.11"
+requires-python = ">=3.11,<3.13"
 repository = "https://github.com/TingtingLiGroup/SENSE"
 dependencies = [
-  "biopython>=1.85",
-  "cloudpickle==3.1.1",
-  "colour==0.1.5",
-  "future==1.0.0",
-  "galois==0.4.6",
-  "hyperopt==0.2.7",
-  "kditransform==0.2.0",
-  "llvmlite==0.44.0",
-  "numba==0.61.2",
-  "scikit-learn>=1.6.1",
-  "numpy>=1.14.0,<2.0",
-  "py4j==0.10.9.9",
+  "afrc==0.3.7",
+  "biopython==1.85",
+  "finches @ git+https://github.com/idptools/finches.git@76779734408567043ad98c456c049010edb3ca9b",
+  "numpy==1.26.4",
+  "openpyxl==3.1.5",
+  "pandas==2.3.0",
+  "pyyaml==6.0.2",
+  "scikit-learn==1.6.1",
+  "scipy==1.16.0",
   "shap==0.48.0",
-  "shapiq==1.3.0",
-  "slicer==0.0.8",
-  "sparse-transform==0.2.1",
+  "sparrow @ git+https://github.com/idptools/sparrow.git@70bd11b6bdddf82376199299b8b3022430ece394",
+  "tabpfn==2.0.9",
   "tabpfn-extensions @ git+https://github.com/PriorLabs/tabpfn-extensions.git@ec002940b6fb0769b407c09c2ac2c22bc732e506",
-  "finches @ git+https://github.com/idptools/finches.git#egg=main",
-  "sparrow @ git+https://github.com/idptools/sparrow.git#egg=main",
-  "tabpfn",
-  "ipykernel>=6.29.5",
-  "openpyxl>=3.1.5",
+  "torch==2.7.1",
+]
+
+[dependency-groups]
+dev = [
+  "pytest==8.4.1",
 ]
 
 [build-system]
